@@ -6,6 +6,7 @@ import Quiz from './pages/Quiz';
 import Game from './pages/Game';
 import Progress from './pages/Progress';
 import Settings from './pages/Settings';
+import HiraganaTable from './pages/HiraganaTable';
 
 export default function App() {
   return (
@@ -18,6 +19,7 @@ export default function App() {
           <Route path="game" element={<Game />} />
           <Route path="progress" element={<Progress />} />
           <Route path="settings" element={<Settings />} />
+          <Route path="table" element={<HiraganaTable />} />
         </Route>
       </Routes>
     </BrowserRouter>

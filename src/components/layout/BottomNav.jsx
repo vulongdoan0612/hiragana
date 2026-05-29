@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { Home, BookOpen, Brain, Gamepad2, BarChart3, Settings } from 'lucide-react';
+import { Home, BookOpen, Brain, Gamepad2, BarChart3, Settings, Grid3x3 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { clsx } from 'clsx';
 
@@ -8,6 +8,7 @@ const links = [
   { to: '/learn', icon: BookOpen, label: 'Học' },
   { to: '/quiz', icon: Brain, label: 'Quiz' },
   { to: '/game', icon: Gamepad2, label: 'Game' },
+  { to: '/table', icon: Grid3x3, label: 'Bảng' },
   { to: '/progress', icon: BarChart3, label: 'Tiến độ' },
   { to: '/settings', icon: Settings, label: 'Cài đặt' },
 ];
