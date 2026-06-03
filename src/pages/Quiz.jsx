@@ -4,8 +4,9 @@ import { CheckCircle2, XCircle, Volume2, Trophy, RotateCcw } from 'lucide-react'
 import Button from '../components/ui/Button';
 import ProgressBar from '../components/ui/ProgressBar';
 import Confetti from '../components/ui/Confetti';
-import { hiraganaData, GROUPS, groupLabels } from '../data/hiragana';
+import { GROUPS } from '../data/hiragana';
 import { useProgressStore } from '../store/useProgressStore';
+import { useCourseData } from '../hooks/useCourseData';
 import { useSpeech, useSound } from '../hooks/useAudio';
 import { getQuizChoices, shuffle } from '../utils/spaced-repetition';
 import { clsx } from 'clsx';
@@ -18,8 +19,8 @@ const QUIZ_TYPES = [
 
 const TOTAL_QUESTIONS = 10;
 
-function buildQuestions(groups, type) {
-  const pool = hiraganaData.filter((c) => groups.includes(c.group));
+function buildQuestions(groups, type, courseData) {
+  const pool = courseData.filter((c) => groups.includes(c.group));
   const qs = shuffle(pool).slice(0, Math.min(TOTAL_QUESTIONS, pool.length));
   return qs.map((correct) => ({
     correct,
@@ -29,6 +30,7 @@ function buildQuestions(groups, type) {
 }
 
 export default function Quiz() {
+  const { courseData, groupLabels, courseName } = useCourseData();
   const [quizType, setQuizType] = useState('kana_to_romaji');
   const [selectedGroups, setSelectedGroups] = useState(['basic']);
   const [questions, setQuestions] = useState([]);
@@ -38,14 +40,20 @@ export default function Quiz() {
   const [streak, setStreak] = useState(0);
   const [showResult, setShowResult] = useState(false);
   const [confetti, setConfetti] = useState(false);
-  const [phase, setPhase] = useState('config'); // config | quiz | summary
+  const [phase, setPhase] = useState('config');
 
   const { markCorrect, markWrong, updateStreak } = useProgressStore();
   const { speak } = useSpeech();
   const { play } = useSound();
 
+  // Reset to config when course changes
+  useEffect(() => {
+    setPhase('config');
+    setSelectedGroups(['basic']);
+  }, [courseData]);
+
   const startQuiz = useCallback(() => {
-    const qs = buildQuestions(selectedGroups, quizType);
+    const qs = buildQuestions(selectedGroups, quizType, courseData);
     setQuestions(qs);
     setQIndex(0);
     setSelected(null);
@@ -53,7 +61,7 @@ export default function Quiz() {
     setStreak(0);
     setShowResult(false);
     setPhase('quiz');
-  }, [selectedGroups, quizType]);
+  }, [selectedGroups, quizType, courseData]);
 
   const current = questions[qIndex];
 
@@ -106,7 +114,10 @@ export default function Quiz() {
   if (phase === 'config') {
     return (
       <div className="py-6 flex flex-col gap-5">
-        <h1 className="text-2xl font-bold text-white">🧠 Quiz Mode</h1>
+        <div>
+          <h1 className="text-2xl font-bold text-white">🧠 Quiz Mode</h1>
+          <p className="text-white/40 text-sm mt-0.5">{courseName}</p>
+        </div>
 
         <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
           <p className="text-xs text-white/40 uppercase tracking-wider mb-3">Loại quiz</p>
@@ -133,7 +144,7 @@ export default function Quiz() {
           <div className="flex flex-wrap gap-2">
             {Object.values(GROUPS).map((g) => {
               const active = selectedGroups.includes(g);
-              const count = hiraganaData.filter((c) => c.group === g).length;
+              const count = courseData.filter((c) => c.group === g).length;
               return (
                 <button
                   key={g}

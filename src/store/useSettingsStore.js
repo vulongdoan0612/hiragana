@@ -13,9 +13,11 @@ export const useSettingsStore = create(
       cardFlipSound: true,
       confettiEnabled: true,
       fontSize: 'normal',
+      selectedCourse: 'hiragana',
 
       toggle: (key) => set((state) => ({ [key]: !state[key] })),
       set: (key, value) => set(() => ({ [key]: value })),
+      setCourse: (course) => set(() => ({ selectedCourse: course, selectedGroups: ['basic'] })),
       toggleGroup: (group) =>
         set((state) => {
           const groups = state.selectedGroups.includes(group)

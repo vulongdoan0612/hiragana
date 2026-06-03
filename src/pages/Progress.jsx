@@ -1,40 +1,47 @@
 import { motion } from 'framer-motion';
 import { Trophy, Flame, Zap, BookOpen, Target, TrendingUp } from 'lucide-react';
 import { useProgressStore } from '../store/useProgressStore';
-import { hiraganaData, groupLabels, GROUPS } from '../data/hiragana';
+import { useCourseData } from '../hooks/useCourseData';
 import ProgressBar from '../components/ui/ProgressBar';
 import StatCard from '../components/ui/StatCard';
 import AchievementCard, { ACHIEVEMENTS } from '../components/progress/AchievementCard';
 
 export default function Progress() {
   const { streak, totalXP, level, learnedCards, achievements, dailyProgress, dailyGoal } = useProgressStore();
+  const { courseData, groupLabels, GROUPS, courseName } = useCourseData();
 
   const learned = Object.keys(learnedCards).length;
-  const totalCards = hiraganaData.length;
-  const totalCorrect = Object.values(learnedCards).reduce((sum, c) => sum + (c.correct || 0), 0);
-  const totalWrong = Object.values(learnedCards).reduce((sum, c) => sum + (c.wrong || 0), 0);
+  const totalCards = courseData.length;
+
+  const courseLearnedCards = Object.entries(learnedCards).filter(([id]) =>
+    courseData.some((c) => c.id === id)
+  );
+  const totalCorrect = courseLearnedCards.reduce((sum, [, c]) => sum + (c.correct || 0), 0);
+  const totalWrong = courseLearnedCards.reduce((sum, [, c]) => sum + (c.wrong || 0), 0);
   const accuracy = totalCorrect + totalWrong > 0
     ? Math.round((totalCorrect / (totalCorrect + totalWrong)) * 100) : 0;
 
-  const difficultCards = Object.entries(learnedCards)
+  const difficultCards = courseLearnedCards
     .filter(([, v]) => (v.difficulty || 0) >= 2)
     .sort(([, a], [, b]) => (b.difficulty || 0) - (a.difficulty || 0))
     .slice(0, 5)
-    .map(([id]) => hiraganaData.find((c) => c.id === id))
+    .map(([id]) => courseData.find((c) => c.id === id))
     .filter(Boolean);
+
+  const courseLearnedCount = courseLearnedCards.filter(([, v]) => v.seen > 0).length;
 
   return (
     <div className="py-6 flex flex-col gap-6">
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
         <h1 className="text-2xl font-bold text-white">📊 Tiến Độ</h1>
-        <p className="text-white/40 text-sm mt-0.5">Hành trình học Hiragana của bạn</p>
+        <p className="text-white/40 text-sm mt-0.5">Hành trình học {courseName} của bạn</p>
       </motion.div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3">
         <StatCard icon={<Flame size={20} className="text-amber-400" />} label="Streak" value={`${streak} ngày`} color="amber" />
         <StatCard icon={<Zap size={20} className="text-violet-400" />} label="Tổng XP" value={totalXP} color="violet" />
-        <StatCard icon={<BookOpen size={20} className="text-emerald-400" />} label="Đã học" value={`${learned}/${totalCards}`} color="emerald" />
+        <StatCard icon={<BookOpen size={20} className="text-emerald-400" />} label="Đã học" value={`${courseLearnedCount}/${totalCards}`} color="emerald" />
         <StatCard icon={<TrendingUp size={20} className="text-sky-400" />} label="Chính xác" value={`${accuracy}%`} color="sky" />
       </div>
 
@@ -58,9 +65,9 @@ export default function Progress() {
 
       {/* Per group */}
       <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
-        <h3 className="text-sm font-semibold text-white mb-4">Tiến độ theo nhóm</h3>
+        <h3 className="text-sm font-semibold text-white mb-4">Tiến độ theo nhóm · {courseName}</h3>
         {Object.values(GROUPS).map((group) => {
-          const groupCards = hiraganaData.filter((c) => c.group === group);
+          const groupCards = courseData.filter((c) => c.group === group);
           const groupLearned = groupCards.filter((c) => learnedCards[c.id]).length;
           return (
             <div key={group} className="mb-4 last:mb-0">

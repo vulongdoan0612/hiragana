@@ -2,7 +2,8 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { BookOpen, Brain, Gamepad2, BarChart3, Flame, Star, Zap, Target } from 'lucide-react';
 import { useProgressStore } from '../store/useProgressStore';
-import { characterOfTheDay, hiraganaData, groupLabels } from '../data/hiragana';
+import { useSettingsStore } from '../store/useSettingsStore';
+import { useCourseData } from '../hooks/useCourseData';
 import ProgressBar from '../components/ui/ProgressBar';
 import StatCard from '../components/ui/StatCard';
 
@@ -16,6 +17,9 @@ const cards = [
 export default function Home() {
   const { streak, totalXP, level, dailyProgress, dailyGoal } = useProgressStore();
   const learned = useProgressStore((s) => Object.keys(s.learnedCards).length);
+  const setCourse = useSettingsStore((s) => s.setCourse);
+  const { courseData, groupLabels, characterOfTheDay, course, courseName, courseEmoji } = useCourseData();
+
   const cotd = characterOfTheDay();
   const xpToNext = (level * 200) - totalXP;
 
@@ -26,7 +30,36 @@ export default function Home() {
         <h1 className="text-3xl font-bold text-white">
           こんにちは! 👋
         </h1>
-        <p className="text-white/50 mt-1">Hãy học Hiragana hôm nay nhé!</p>
+        <p className="text-white/50 mt-1">Hãy học tiếng Nhật hôm nay nhé!</p>
+      </motion.div>
+
+      {/* Course Switcher */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
+        className="bg-white/5 border border-white/10 rounded-2xl p-1.5 flex gap-1.5"
+      >
+        <button
+          onClick={() => setCourse('hiragana')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+            course === 'hiragana'
+              ? 'bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white shadow-lg shadow-violet-500/25'
+              : 'text-white/50 hover:text-white/80'
+          }`}
+        >
+          <span className="text-lg">🌸</span>
+          Hiragana
+        </button>
+        <button
+          onClick={() => setCourse('katakana')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+            course === 'katakana'
+              ? 'bg-gradient-to-r from-sky-500 to-cyan-500 text-white shadow-lg shadow-sky-500/25'
+              : 'text-white/50 hover:text-white/80'
+          }`}
+        >
+          <span className="text-lg">🔷</span>
+          Katakana
+        </button>
       </motion.div>
 
       {/* Stats Row */}
@@ -37,7 +70,7 @@ export default function Home() {
         <StatCard icon={<Flame size={20} className="text-amber-400" />} label="Ngày liên tiếp" value={streak} color="amber" />
         <StatCard icon={<Zap size={20} className="text-violet-400" />} label="Tổng XP" value={totalXP} color="violet" />
         <StatCard icon={<Star size={20} className="text-sky-400" />} label="Cấp độ" value={`Lv.${level}`} color="sky" />
-        <StatCard icon={<BookOpen size={20} className="text-emerald-400" />} label="Đã học" value={`${learned}/${hiraganaData.length}`} color="emerald" />
+        <StatCard icon={<BookOpen size={20} className="text-emerald-400" />} label="Đã học" value={`${learned}/${courseData.length}`} color="emerald" />
       </motion.div>
 
       {/* Daily Goal */}
@@ -72,17 +105,25 @@ export default function Home() {
       {/* Character of the Day */}
       <motion.div
         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
-        className="bg-gradient-to-br from-fuchsia-900/40 to-violet-900/40 border border-fuchsia-500/30 rounded-2xl p-5"
+        className={`border rounded-2xl p-5 ${
+          course === 'katakana'
+            ? 'bg-gradient-to-br from-sky-900/40 to-cyan-900/40 border-sky-500/30'
+            : 'bg-gradient-to-br from-fuchsia-900/40 to-violet-900/40 border-fuchsia-500/30'
+        }`}
       >
-        <div className="text-xs text-fuchsia-400 font-semibold uppercase tracking-widest mb-3">
-          ✨ Ký tự hôm nay
+        <div className={`text-xs font-semibold uppercase tracking-widest mb-3 ${
+          course === 'katakana' ? 'text-sky-400' : 'text-fuchsia-400'
+        }`}>
+          ✨ Ký tự hôm nay · {courseName}
         </div>
         <div className="flex items-center gap-4">
           <div className="text-6xl font-thin text-white" style={{ fontFamily: 'serif' }}>
             {cotd.kana}
           </div>
           <div className="flex-1">
-            <div className="text-xl font-bold text-fuchsia-300">{cotd.romaji}</div>
+            <div className={`text-xl font-bold ${course === 'katakana' ? 'text-sky-300' : 'text-fuchsia-300'}`}>
+              {cotd.romaji}
+            </div>
             <div className="text-white/50 text-sm mt-1">{cotd.mnemonic}</div>
             <div className="flex gap-2 mt-2 flex-wrap">
               {cotd.examples.slice(0, 1).map((ex) => (
@@ -110,7 +151,7 @@ export default function Home() {
           >
             <Link
               to={to}
-              className={`bg-gradient-to-br border rounded-2xl p-4 flex flex-col gap-2 block ${bg}`}
+              className={`bg-gradient-to-br border rounded-2xl p-4 flex flex-col gap-2 ${bg}`}
             >
               <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${color} flex items-center justify-center`}>
                 <Icon size={20} className="text-white" />
@@ -127,9 +168,9 @@ export default function Home() {
         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
         className="bg-white/5 border border-white/10 rounded-2xl p-4"
       >
-        <h3 className="text-sm font-semibold text-white mb-3">📚 Nội dung học</h3>
+        <h3 className="text-sm font-semibold text-white mb-3">📚 Nội dung học · {courseName}</h3>
         {Object.entries(groupLabels).map(([key, label]) => {
-          const total = hiraganaData.filter((h) => h.group === key).length;
+          const total = courseData.filter((h) => h.group === key).length;
           return (
             <div key={key} className="flex items-center justify-between py-1.5 border-b border-white/5 last:border-0">
               <span className="text-white/70 text-sm">{label}</span>

@@ -1,7 +1,8 @@
 import { motion } from 'framer-motion';
-import { Volume2, Eye, Lightbulb, Zap, Trash2, Sparkles, Moon } from 'lucide-react';
+import { Volume2, Eye, Lightbulb, Zap, Trash2, Sparkles } from 'lucide-react';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { useProgressStore } from '../store/useProgressStore';
+import { useCourseData } from '../hooks/useCourseData';
 import Button from '../components/ui/Button';
 
 function Toggle({ value, onChange }) {
@@ -41,7 +42,7 @@ function SettingRow({ icon: Icon, label, desc, value, onChange }) {
 export default function Settings() {
   const settings = useSettingsStore();
   const { learnedCards } = useProgressStore();
-  const reset = useProgressStore.persist?.clearStorage;
+  const { course, courseName } = useCourseData();
 
   const handleReset = () => {
     if (confirm('Xóa toàn bộ tiến độ? Không thể hoàn tác!')) {
@@ -55,6 +56,34 @@ export default function Settings() {
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
         <h1 className="text-2xl font-bold text-white">⚙️ Cài Đặt</h1>
       </motion.div>
+
+      {/* Course selection */}
+      <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
+        <h3 className="text-xs text-white/40 uppercase tracking-wider mb-3">Khóa học</h3>
+        <div className="flex gap-2">
+          <button
+            onClick={() => settings.setCourse('hiragana')}
+            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all border ${
+              course === 'hiragana'
+                ? 'bg-violet-500/30 border-violet-500 text-violet-300'
+                : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
+            }`}
+          >
+            <span>🌸</span> Hiragana
+          </button>
+          <button
+            onClick={() => settings.setCourse('katakana')}
+            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all border ${
+              course === 'katakana'
+                ? 'bg-sky-500/30 border-sky-500 text-sky-300'
+                : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
+            }`}
+          >
+            <span>🔷</span> Katakana
+          </button>
+        </div>
+        <p className="text-white/30 text-xs mt-2 text-center">Đang học: {courseName}</p>
+      </div>
 
       {/* Audio & Display */}
       <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
@@ -89,7 +118,7 @@ export default function Settings() {
             <span>Phiên bản</span><span className="text-white">1.0.0</span>
           </div>
           <div className="flex justify-between">
-            <span>Tổng ký tự</span><span className="text-white">{Object.keys(learnedCards).length} đã học</span>
+            <span>Tổng ký tự đã học</span><span className="text-white">{Object.keys(learnedCards).length}</span>
           </div>
           <div className="flex justify-between">
             <span>Tech stack</span><span className="text-white">React + Tailwind + Framer</span>

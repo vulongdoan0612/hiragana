@@ -4,30 +4,41 @@ import { Shuffle, RotateCcw, Filter, BookOpen, PenLine } from 'lucide-react';
 import FlashCard from '../components/flashcard/FlashCard';
 import Button from '../components/ui/Button';
 import ProgressBar from '../components/ui/ProgressBar';
-import { hiraganaData, groupLabels, GROUPS, ROW_LABELS, BASIC_ROWS } from '../data/hiragana';
+import { GROUPS } from '../data/hiragana';
 import { useProgressStore } from '../store/useProgressStore';
+import { useCourseData } from '../hooks/useCourseData';
 import { shuffle } from '../utils/spaced-repetition';
 
 const GROUP_KEYS = Object.keys(GROUPS);
 
 export default function Learn() {
-  const [mode, setMode] = useState('normal'); // 'normal' | 'practice'
+  const { courseData, groupLabels, ROW_LABELS, BASIC_ROWS, courseName } = useCourseData();
+
+  const [mode, setMode] = useState('normal');
   const [selectedGroups, setSelectedGroups] = useState(['basic']);
   const [selectedRows, setSelectedRows] = useState([]);
-  const [cards, setCards] = useState(() =>
-    hiraganaData.filter((c) => c.group === 'basic')
-  );
+  const [cards, setCards] = useState(() => courseData.filter((c) => c.group === 'basic'));
   const [index, setIndex] = useState(0);
   const [showFilter, setShowFilter] = useState(false);
   const [isShuffled, setIsShuffled] = useState(false);
   const updateStreak = useProgressStore((s) => s.updateStreak);
 
+  // Reset cards when course changes
+  useEffect(() => {
+    const filtered = courseData.filter((c) => c.group === 'basic');
+    setCards(filtered);
+    setIndex(0);
+    setSelectedGroups(['basic']);
+    setSelectedRows([]);
+    setIsShuffled(false);
+  }, [courseData]);
+
   const getFilteredCards = useCallback((groups, rows) =>
-    hiraganaData.filter((c) => {
+    courseData.filter((c) => {
       if (!groups.includes(c.group)) return false;
       if (c.group === GROUPS.BASIC && rows.length > 0) return rows.includes(c.row);
       return true;
-    }), []);
+    }), [courseData]);
 
   const toggleGroup = (group) => {
     const next = selectedGroups.includes(group)
@@ -99,7 +110,9 @@ export default function Learn() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">📖 Learn Mode</h1>
-          <p className="text-white/40 text-sm mt-0.5">Thẻ {index + 1}/{cards.length}</p>
+          <p className="text-white/40 text-sm mt-0.5">
+            {courseName} · Thẻ {index + 1}/{cards.length}
+          </p>
         </div>
         <div className="flex gap-2 items-center">
           {/* Mode toggle */}
@@ -163,7 +176,7 @@ export default function Learn() {
               <div className="flex flex-wrap gap-2">
                 {GROUP_KEYS.map((key) => {
                   const active = selectedGroups.includes(GROUPS[key]);
-                  const count = hiraganaData.filter((c) => c.group === GROUPS[key]).length;
+                  const count = courseData.filter((c) => c.group === GROUPS[key]).length;
                   return (
                     <button
                       key={key}
@@ -204,7 +217,7 @@ export default function Learn() {
                   <div className="flex flex-wrap gap-2">
                     {BASIC_ROWS.map((row) => {
                       const active = selectedRows.includes(row);
-                      const count = hiraganaData.filter((c) => c.group === 'basic' && c.row === row).length;
+                      const count = courseData.filter((c) => c.group === 'basic' && c.row === row).length;
                       return (
                         <button
                           key={row}

@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { hiraganaData, GROUPS, BASIC_ROWS, ROW_LABELS } from '../data/hiragana';
 import { useProgressStore } from '../store/useProgressStore';
 import { useSpeech } from '../hooks/useAudio';
+import { useCourseData } from '../hooks/useCourseData';
 
 const VOWELS = ['a', 'i', 'u', 'e', 'o'];
 
@@ -15,13 +15,6 @@ const rowConsonant = (row, cards) => {
   const cons = cards[0]?.romaji.split('/')[0].slice(0, -1);
   return cons || '–';
 };
-
-const GROUPS_CONFIG = [
-  { key: GROUPS.BASIC,       label: 'Cơ Bản' },
-  { key: GROUPS.DAKUTEN,     label: 'Dakuten ゛' },
-  { key: GROUPS.HANDAKUTEN,  label: 'Handakuten ゜' },
-  { key: GROUPS.YOON,        label: 'Âm Ghép' },
-];
 
 function KanaCell({ card, isLearned, onSpeak }) {
   if (!card) return <div className="aspect-square" />;
@@ -80,7 +73,7 @@ function GridTable({ rows, cards, learnedCards, onSpeak }) {
   );
 }
 
-function YoonTable({ rows, cards, learnedCards, onSpeak }) {
+function YoonTable({ rows, cards, learnedCards, onSpeak, ROW_LABELS }) {
   return (
     <div className="flex flex-col gap-5">
       {rows.map((row) => {
@@ -115,25 +108,33 @@ function YoonTable({ rows, cards, learnedCards, onSpeak }) {
   );
 }
 
-export default function HiraganaTable() {
+export default function KanaTable() {
+  const { courseData, GROUPS, ROW_LABELS, BASIC_ROWS, courseName, courseEmoji } = useCourseData();
   const [activeGroup, setActiveGroup] = useState(GROUPS.BASIC);
   const learnedCards = useProgressStore((s) => s.learnedCards);
   const { speak } = useSpeech();
 
+  const GROUPS_CONFIG = [
+    { key: GROUPS.BASIC,       label: 'Cơ Bản' },
+    { key: GROUPS.DAKUTEN,     label: 'Dakuten ゛' },
+    { key: GROUPS.HANDAKUTEN,  label: 'Handakuten ゜' },
+    { key: GROUPS.YOON,        label: 'Âm Ghép' },
+  ];
+
   const onSpeak = (kana) => speak(kana, { force: true });
 
-  const cards = hiraganaData.filter((c) => c.group === activeGroup);
+  const cards = courseData.filter((c) => c.group === activeGroup);
   const rows = [...new Set(cards.map((c) => c.row))];
 
-  const totalSeen = hiraganaData.filter((c) => learnedCards[c.id]?.seen > 0).length;
+  const totalSeen = courseData.filter((c) => learnedCards[c.id]?.seen > 0).length;
 
   return (
     <div className="py-6 flex flex-col gap-5">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-white">📋 Bảng Chữ Hiragana</h1>
+        <h1 className="text-2xl font-bold text-white">📋 Bảng Chữ {courseName}</h1>
         <p className="text-white/40 text-sm mt-0.5">
-          {hiraganaData.length} ký tự · Đã xem {totalSeen} · Nhấn để nghe
+          {courseData.length} ký tự · Đã xem {totalSeen} · Nhấn để nghe
         </p>
       </div>
 
@@ -156,7 +157,7 @@ export default function HiraganaTable() {
 
       {/* Table content */}
       {activeGroup === GROUPS.YOON ? (
-        <YoonTable rows={rows} cards={cards} learnedCards={learnedCards} onSpeak={onSpeak} />
+        <YoonTable rows={rows} cards={cards} learnedCards={learnedCards} onSpeak={onSpeak} ROW_LABELS={ROW_LABELS} />
       ) : activeGroup === GROUPS.BASIC ? (
         <GridTable rows={BASIC_ROWS} cards={cards} learnedCards={learnedCards} onSpeak={onSpeak} />
       ) : (

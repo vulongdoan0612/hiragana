@@ -1,18 +1,23 @@
 import { Link } from 'react-router-dom';
 import { Flame, Zap, Star } from 'lucide-react';
 import { useProgressStore } from '../../store/useProgressStore';
+import { useCourseData } from '../../hooks/useCourseData';
 
 export default function Navbar() {
   const { streak, totalXP, level } = useProgressStore();
+  const { courseName, courseEmoji } = useCourseData();
 
   return (
     <header className="fixed top-0 left-0 right-0 z-40 bg-slate-950/70 backdrop-blur-xl border-b border-white/5">
       <div className="max-w-2xl mx-auto px-4 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
-          <span className="text-2xl">🌸</span>
-          <span className="font-bold text-lg bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
-            HiraLearn
-          </span>
+          <span className="text-2xl">{courseEmoji}</span>
+          <div className="flex flex-col leading-tight">
+            <span className="font-bold text-base bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
+              KanaLearn
+            </span>
+            <span className="text-[10px] text-white/30 font-medium">{courseName}</span>
+          </div>
         </Link>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1 bg-amber-500/20 border border-amber-500/30 rounded-full px-2.5 py-1">
